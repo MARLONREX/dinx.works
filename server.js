@@ -1,5 +1,5 @@
 // server.js
-// Backend for DINX — serves frontend + calls Groq LLM + Tavily web search
+// Backend for DINX — serves frontend + calls DeepSeek LLM + Tavily web search
 
 const express = require('express');
 const path = require('path');
@@ -13,14 +13,14 @@ const PORT = process.env.PORT || 3000;
 // 🔑 API KEYS FROM ENV
 // ==========================
 
-// LLM provider (Groq)
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
+// LLM provider (DeepSeek)
+const DEEPSEEK_API_KEY = process.env.sk-99037c05814d40cdac51ca1ec1065b38;
 
 // Tavily search
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+const TAVILY_API_KEY = process.env.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;
 
-if (!GROQ_API_KEY) {
-  console.warn('⚠️ GROQ_API_KEY is not set. LLM calls will fail.');
+if (!DEEPSEEK_API_KEY) {
+  console.warn('⚠️ DEEPSEEK_API_KEY is not set. LLM calls will fail.');
 }
 
 if (!TAVILY_API_KEY) {
@@ -76,7 +76,7 @@ async function searchWebWithTavily(query) {
       body: JSON.stringify({
         api_key: TAVILY_API_KEY,
         query,
-        search_depth: 'basic',    // or "advanced"
+        search_depth: 'basic', // or "advanced"
         max_results: 5,
         include_answer: true,
       }),
@@ -111,8 +111,8 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { model, system, message } = req.body;
 
-    if (!GROQ_API_KEY) {
-      return res.status(500).json({ error: 'GROQ_API_KEY not set on server.' });
+    if (!DEEPSEEK_API_KEY) {
+      return res.status(500).json({ error: 'DEEPSEEK_API_KEY not set on server.' });
     }
 
     if (!model || !message) {
@@ -146,31 +146,29 @@ app.post('/api/chat', async (req, res) => {
 
     messages.push({ role: 'user', content: message });
 
-    // 3️⃣ Call Groq LLM
-    const groqRes = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-        }),
-      }
-    );
+    // 3️⃣ Call DeepSeek LLM (OpenAI-compatible endpoint)
+    // NOTE: Use model names like "deepseek-chat" or "deepseek-reasoner"
+    const deepseekRes = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: model || 'deepseek-chat',
+        messages,
+      }),
+    });
 
-    if (!groqRes.ok) {
-      const errorText = await groqRes.text();
-      console.error('Groq API error:', errorText);
+    if (!deepseekRes.ok) {
+      const errorText = await deepseekRes.text();
+      console.error('DeepSeek API error:', errorText);
       return res
         .status(500)
-        .json({ error: 'Groq API error', details: errorText });
+        .json({ error: 'DeepSeek API error', details: errorText });
     }
 
-    const data = await groqRes.json();
+    const data = await deepseekRes.json();
     const reply = data.choices?.[0]?.message?.content || 'No reply from model.';
     res.json({ reply });
   } catch (err) {
