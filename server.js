@@ -14,10 +14,10 @@ const PORT = process.env.PORT || 3000;
 // ==========================
 
 // LLM provider (DeepSeek)
-const DEEPSEEK_API_KEY = process.env.sk-99037c05814d40cdac51ca1ec1065b38;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 // Tavily search
-const TAVILY_API_KEY = process.env.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;
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 
 if (!DEEPSEEK_API_KEY) {
   console.warn('⚠️ DEEPSEEK_API_KEY is not set. LLM calls will fail.');
@@ -183,3 +183,4 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ DINX server listening on http://localhost:${PORT}`);
 });
+
