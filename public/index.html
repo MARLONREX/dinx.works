@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DINX – AI Design Assistant</title>
+
+  <style>
+    :root {
+      --text: #111;
+      --muted: #888;
+
+      /* AI messages: pure white */
+      --ai-bubble: #ffffff;
+
+      /* User messages: very light grey, subtle */
+      --user-bubble: #eaeaea;
+      --user-text: #000;
+
+      --border: #e6e6e6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: "Univers", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* === INTRO OVERLAY & LOGO === */
+
+    #intro-overlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      z-index: 999;
+      pointer-events: auto;
+    }
+
+    #intro-logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 0.1em;
+      white-space: nowrap;
+    }
+
+    .intro-letter {
+      font-family: "Univers", system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      font-size: clamp(40px, 12vw, 160px);
+      color: #111;
+      opacity: 0;                 /* start invisible */
+      transform: scale(1);
+      transition:
+        opacity 3s ease,          /* fade-in over 3s */
+        transform 1.4s ease,
+        letter-spacing 1.4s ease; /* shrink + tighten spacing */
+    }
+
+    /* Step 1 — fade the letters in */
+    body.intro-visible .intro-letter {
+      opacity: 1;
+    }
+
+    /* Step 2 — move logo block to top-left & shrink */
+    body.intro-move #intro-logo {
+      top: 29px;                       /* visually centred in ~58px header */
+      left: 22px;                      /* matches header padding */
+      transform: translate(0, -50%);   /* vertical centering in header band */
+      transition:
+        top 1.3s ease,
+        left 1.3s ease,
+        transform 1.3s ease;
+    }
+
+  	 body.intro-move .intro-letter {
+  	transform: scale(0.11);     /* same logo scale */
+ 	 letter-spacing: 0.01em;     /* MUCH tighter spacing — almost touching */
+	}
+
+    /* Step 3 — after animation, overlay becomes transparent but DINX stays */
+    body.intro-done #intro-overlay {
+      background: transparent;
+      pointer-events: none;
+      transition: background 0.4s ease;
+      letter-spacing: 0.001em;   /* Keep the tight spacing AFTER movement */
+    }
+
+    /* We keep the letters visible permanently as the logo */
+    body.intro-done .intro-letter {
+      opacity: 1;
+    }
+
+    /* === HEADER (just a bar, no separate logo text) === */
+
+    header {
+      height: 58px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 22px;
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    /* === MAIN CHAT AREA === */
+
+    main.chat-area {
+      padding: 20px 24px 120px;
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: calc(100vh - 58px);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    body.intro-done main.chat-area {
+      opacity: 1;
+    }
+
+    .message {
+      max-width: 78%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border-radius: 16px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+      background: var(--ai-bubble);
+      color: var(--text);
+      border-bottom-left-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--user-bubble);
+      color: var(--user-text);
+      border-bottom-right-radius: 6px;
+      border: 1px solid #dedede;
+    }
+
+    .message.error {
+      align-self: center;
+      background: #ffe5e5;
+      color: #990000;
+      border: 1px solid #ffcccc;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === INPUT BAR — fixed at bottom === */
+
+    .input-wrapper {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 18px;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    body.intro-done .input-wrapper {
+      opacity: 1;
+    }
+
+    .input-bar {
+      width: 100%;
+      max-width: 780px;
+      display: flex;
+      gap: 10px;
+    }
+
+    textarea {
+      flex: 1;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      font-size: 15px;
+      resize: none;
+      height: 50px;
+      max-height: 150px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #333;
+    }
+
+    button {
+      background: #111;
+      color: white;
+      padding: 0 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover:not(:disabled) { background: black; }
+    button:disabled { background: #ccc; cursor: default; }
+
+    @media (max-width: 600px) {
+      .message { max-width: 90%; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- INTRO OVERLAY: this DINX becomes the logo -->
+  <div id="intro-overlay">
+    <div id="intro-logo" aria-label="DINX">
+      <span class="intro-letter">D</span>
+      <span class="intro-letter">I</span>
+      <span class="intro-letter">N</span>
+      <span class="intro-letter">X</span>
+    </div>
+  </div>
+
+  <!-- HEADER: structural only, no text logo -->
+  <header></header>
+
+  <!-- MAIN CHAT AREA -->
+  <main class="chat-area" id="chatArea">
+    <div class="message ai">
+      Hi, I’m DINX. Tell me about your project — a room, a building, a product, or a concept — and I’ll help you explore layouts, materials, lighting, and creative direction.
+    </div>
+  </main>
+
+  <!-- INPUT BAR -->
+  <div class="input-wrapper">
+    <div class="input-bar">
+      <textarea id="userInput" placeholder="Ask DINX anything…"></textarea>
+      <button id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script>
+    console.log("DINX script loaded");
+
+    const SYSTEM_PROMPT = `
+You are DINX, an AI design assistant specialising in architecture,
+interiors, concept development, and creative direction.
+Respond with clarity, minimalism, and useful visual suggestions.
+    `.trim();
+
+    function setupIntro() {
+      const overlay = document.getElementById("intro-overlay");
+
+      // STEP 1 — Start fading in the letters over 3 seconds
+      setTimeout(() => {
+        document.body.classList.add("intro-visible");
+      }, 50);
+
+      // STEP 2 — After 3 seconds, start move + shrink (duration 1.4s)
+      setTimeout(() => {
+        document.body.classList.add("intro-move");
+      }, 3000); // move from 3.0s to 4.4s
+
+      // STEP 3 — After move completes (~4.4s), reveal UI, keep logo in place
+      setTimeout(() => {
+        document.body.classList.add("intro-done");
+        // We do NOT remove overlay; it becomes transparent but keeps DINX as logo
+      }, 4400);
+    }
+
+    function setupChat() {
+      const chatArea = document.getElementById("chatArea");
+      const userInput = document.getElementById("userInput");
+      const sendButton = document.getElementById("sendButton");
+
+      if (!chatArea || !userInput || !sendButton) {
+        console.error("❌ DINX: chat elements not found");
+        return;
+      }
+
+      function addMessage(sender, text, isError = false) {
+        const div = document.createElement("div");
+        div.classList.add("message", sender);
+        if (isError) div.classList.add("error");
+        div.textContent = text;
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
+      async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        addMessage("user", text);
+        userInput.value = "";
+
+        sendButton.disabled = true;
+        sendButton.textContent = "Thinking…";
+
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "llama-3.1-8b-instant",
+              system: SYSTEM_PROMPT,
+              message: text
+            })
+          });
+
+          if (!res.ok) {
+            throw new Error("Backend error " + res.status);
+          }
+
+          const data = await res.json();
+          addMessage("ai", data.reply || "No reply.");
+        } catch (err) {
+          console.error(err);
+          addMessage("ai", "Error: " + err.message, true);
+        }
+
+        sendButton.disabled = false;
+        sendButton.textContent = "Send";
+      }
+
+      sendButton.addEventListener("click", sendMessage);
+
+      userInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setupIntro();
+      setupChat();
+    });
+  </script>
+
+</body>
+</html>
