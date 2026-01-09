@@ -32,7 +32,6 @@
     }
 
     /* === INTRO OVERLAY & LOGO === */
-
     #intro-overlay {
       position: fixed;
       inset: 0;
@@ -57,50 +56,40 @@
       letter-spacing: 0.15em;
       font-size: clamp(40px, 12vw, 160px);
       color: #111;
-      opacity: 0;                 /* start invisible */
+      opacity: 0;
       transform: scale(1);
       transition:
-        opacity 3s ease,          /* fade-in over 3s */
+        opacity 3s ease,
         transform 1.4s ease,
-        letter-spacing 1.4s ease; /* shrink + tighten spacing */
+        letter-spacing 1.4s ease;
     }
 
-    /* Step 1 — fade the letters in */
-    body.intro-visible .intro-letter {
-      opacity: 1;
-    }
+    body.intro-visible .intro-letter { opacity: 1; }
 
-    /* Step 2 — move logo block to top-left & shrink */
     body.intro-move #intro-logo {
-      top: 29px;                       /* visually centred in ~58px header */
-      left: 22px;                      /* matches header padding */
-      transform: translate(0, -50%);   /* vertical centering in header band */
+      top: 29px;
+      left: 22px;
+      transform: translate(0, -50%);
       transition:
         top 1.3s ease,
         left 1.3s ease,
         transform 1.3s ease;
     }
 
-  	 body.intro-move .intro-letter {
-  	transform: scale(0.11);     /* same logo scale */
- 	 letter-spacing: 0.01em;     /* MUCH tighter spacing — almost touching */
-	}
+    body.intro-move .intro-letter {
+      transform: scale(0.11);
+      letter-spacing: 0.01em;
+    }
 
-    /* Step 3 — after animation, overlay becomes transparent but DINX stays */
     body.intro-done #intro-overlay {
       background: transparent;
       pointer-events: none;
       transition: background 0.4s ease;
-      letter-spacing: 0.001em;   /* Keep the tight spacing AFTER movement */
     }
 
-    /* We keep the letters visible permanently as the logo */
-    body.intro-done .intro-letter {
-      opacity: 1;
-    }
+    body.intro-done .intro-letter { opacity: 1; }
 
-    /* === HEADER (just a bar, no separate logo text) === */
-
+    /* === HEADER (just a bar) === */
     header {
       height: 58px;
       border-bottom: 1px solid var(--border);
@@ -114,7 +103,6 @@
     }
 
     /* === MAIN CHAT AREA === */
-
     main.chat-area {
       padding: 20px 24px 120px;
       max-width: 780px;
@@ -125,11 +113,10 @@
       min-height: calc(100vh - 58px);
       opacity: 0;
       transition: opacity 0.4s ease;
+      overflow-anchor: none;
     }
 
-    body.intro-done main.chat-area {
-      opacity: 1;
-    }
+    body.intro-done main.chat-area { opacity: 1; }
 
     .message {
       max-width: 78%;
@@ -162,6 +149,7 @@
       background: #ffe5e5;
       color: #990000;
       border: 1px solid #ffcccc;
+      max-width: 90%;
     }
 
     @keyframes fadeIn {
@@ -170,7 +158,6 @@
     }
 
     /* === INPUT BAR — fixed at bottom === */
-
     .input-wrapper {
       position: fixed;
       bottom: 0;
@@ -185,9 +172,7 @@
       transition: opacity 0.4s ease;
     }
 
-    body.intro-done .input-wrapper {
-      opacity: 1;
-    }
+    body.intro-done .input-wrapper { opacity: 1; }
 
     .input-bar {
       width: 100%;
@@ -208,9 +193,7 @@
       outline: none;
     }
 
-    textarea:focus {
-      border-color: #333;
-    }
+    textarea:focus { border-color: #333; }
 
     button {
       background: #111;
@@ -233,8 +216,7 @@
 </head>
 
 <body>
-
-  <!-- INTRO OVERLAY: this DINX becomes the logo -->
+  <!-- INTRO OVERLAY: DINX becomes the logo -->
   <div id="intro-overlay">
     <div id="intro-logo" aria-label="DINX">
       <span class="intro-letter">D</span>
@@ -244,17 +226,14 @@
     </div>
   </div>
 
-  <!-- HEADER: structural only, no text logo -->
   <header></header>
 
-  <!-- MAIN CHAT AREA -->
   <main class="chat-area" id="chatArea">
     <div class="message ai">
       Hi, I’m DINX. Tell me about your project — a room, a building, a product, or a concept — and I’ll help you explore layouts, materials, lighting, and creative direction.
     </div>
   </main>
 
-  <!-- INPUT BAR -->
   <div class="input-wrapper">
     <div class="input-bar">
       <textarea id="userInput" placeholder="Ask DINX anything…"></textarea>
@@ -265,6 +244,10 @@
   <script>
     console.log("DINX script loaded");
 
+    // ====== MEMORY (browser localStorage) ======
+    let chatHistory = JSON.parse(localStorage.getItem("dinx_history") || "[]");
+    const MAX_TURNS = 20; // keeps history small for speed/cost
+
     const SYSTEM_PROMPT = `
 You are DINX, an AI design assistant specialising in architecture,
 interiors, concept development, and creative direction.
@@ -272,23 +255,9 @@ Respond with clarity, minimalism, and useful visual suggestions.
     `.trim();
 
     function setupIntro() {
-      const overlay = document.getElementById("intro-overlay");
-
-      // STEP 1 — Start fading in the letters over 3 seconds
-      setTimeout(() => {
-        document.body.classList.add("intro-visible");
-      }, 50);
-
-      // STEP 2 — After 3 seconds, start move + shrink (duration 1.4s)
-      setTimeout(() => {
-        document.body.classList.add("intro-move");
-      }, 3000); // move from 3.0s to 4.4s
-
-      // STEP 3 — After move completes (~4.4s), reveal UI, keep logo in place
-      setTimeout(() => {
-        document.body.classList.add("intro-done");
-        // We do NOT remove overlay; it becomes transparent but keeps DINX as logo
-      }, 4400);
+      setTimeout(() => document.body.classList.add("intro-visible"), 50);
+      setTimeout(() => document.body.classList.add("intro-move"), 3000);
+      setTimeout(() => document.body.classList.add("intro-done"), 4400);
     }
 
     function setupChat() {
@@ -310,12 +279,28 @@ Respond with clarity, minimalism, and useful visual suggestions.
         chatArea.scrollTop = chatArea.scrollHeight;
       }
 
+      // ✅ Render saved history so the UI matches the model memory
+      if (chatHistory.length) {
+        for (const m of chatHistory) {
+          if (!m || typeof m !== "object") continue;
+          if (m.role === "user") addMessage("user", m.content || "");
+          if (m.role === "assistant") addMessage("ai", m.content || "");
+        }
+        // Add a little spacing after restoring history
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
       async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
+        // show + store user message
         addMessage("user", text);
         userInput.value = "";
+
+        chatHistory.push({ role: "user", content: text });
+        chatHistory = chatHistory.slice(-MAX_TURNS * 2);
+        localStorage.setItem("dinx_history", JSON.stringify(chatHistory));
 
         sendButton.disabled = true;
         sendButton.textContent = "Thinking…";
@@ -327,23 +312,33 @@ Respond with clarity, minimalism, and useful visual suggestions.
             body: JSON.stringify({
               model: "llama-3.1-8b-instant",
               system: SYSTEM_PROMPT,
-              message: text
+              message: text,
+              history: chatHistory // ✅ send full conversation history
             })
           });
 
+          const data = await res.json();
+
           if (!res.ok) {
-            throw new Error("Backend error " + res.status);
+            throw new Error(data?.details || data?.error || ("Backend error " + res.status));
           }
 
-          const data = await res.json();
-          addMessage("ai", data.reply || "No reply.");
+          const reply = data.reply || "No reply.";
+
+          // show + store assistant reply
+          addMessage("ai", reply);
+
+          chatHistory.push({ role: "assistant", content: reply });
+          chatHistory = chatHistory.slice(-MAX_TURNS * 2);
+          localStorage.setItem("dinx_history", JSON.stringify(chatHistory));
+
         } catch (err) {
           console.error(err);
           addMessage("ai", "Error: " + err.message, true);
+        } finally {
+          sendButton.disabled = false;
+          sendButton.textContent = "Send";
         }
-
-        sendButton.disabled = false;
-        sendButton.textContent = "Send";
       }
 
       sendButton.addEventListener("click", sendMessage);
@@ -361,6 +356,4 @@ Respond with clarity, minimalism, and useful visual suggestions.
       setupChat();
     });
   </script>
-
 </body>
-</html>
