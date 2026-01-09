@@ -30,52 +30,6 @@
       overflow-x: hidden;
     }
 
-    /* === INTRO === */
-
-    #intro-overlay {
-      position: fixed;
-      inset: 0;
-      background: white;
-      z-index: 999;
-    }
-
-    #intro-logo {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      gap: 0.1em;
-    }
-
-    .intro-letter {
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      font-size: clamp(40px, 12vw, 160px);
-      color: var(--vermillion-soft);
-      opacity: 0;
-      transition: opacity 3s ease, transform 1.3s ease, letter-spacing 1.3s ease, color 1.3s ease;
-    }
-
-    body.intro-visible .intro-letter { opacity: 1; }
-
-    body.intro-move #intro-logo {
-      top: 29px;
-      left: 22px;
-      transform: translate(0, -50%);
-    }
-
-    body.intro-move .intro-letter {
-      transform: scale(0.11);
-      letter-spacing: 0.01em;
-      color: #fff;
-    }
-
-    body.intro-done #intro-overlay {
-      pointer-events: none;
-      background: transparent;
-    }
-
     /* === HEADER === */
 
     header {
@@ -84,6 +38,16 @@
       position: sticky;
       top: 0;
       z-index: 10;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo {
+      margin-left: 50px;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.15em;
+      color: white;
     }
 
     /* === CHAT === */
@@ -95,11 +59,8 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      opacity: 0;
-      transition: opacity 0.4s ease;
+      opacity: 1;
     }
-
-    body.intro-done main { opacity: 1; }
 
     .message {
       max-width: 78%;
@@ -148,11 +109,8 @@
       padding: 14px 18px;
       display: flex;
       justify-content: center;
-      opacity: 0;
-      transition: opacity 0.4s ease;
+      opacity: 1;
     }
-
-    body.intro-done .input-wrapper { opacity: 1; }
 
     .input-bar {
       max-width: 780px;
@@ -188,16 +146,9 @@
 
 <body>
 
-<div id="intro-overlay">
-  <div id="intro-logo">
-    <span class="intro-letter">D</span>
-    <span class="intro-letter">I</span>
-    <span class="intro-letter">N</span>
-    <span class="intro-letter">X</span>
-  </div>
-</div>
-
-<header></header>
+<header>
+  <div class="header-logo">DINX</div>
+</header>
 
 <main id="chatArea">
   <div class="message ai">
@@ -215,12 +166,6 @@
 <script>
   // Forget all memory on reload
   try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
-
-  function setupIntro() {
-    setTimeout(() => document.body.classList.add("intro-visible"), 50);
-    setTimeout(() => document.body.classList.add("intro-move"), 3000);
-    setTimeout(() => document.body.classList.add("intro-done"), 4400);
-  }
 
   async function sendMessage() {
     const input = document.getElementById("userInput");
@@ -273,8 +218,6 @@
       sendMessage();
     }
   };
-
-  setupIntro();
 </script>
 
 </body>
