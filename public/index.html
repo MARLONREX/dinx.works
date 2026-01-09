@@ -317,9 +317,32 @@ Respond with clarity, minimalism, and useful visual suggestions.
           chatHistory = chatHistory.slice(-MAX_TURNS * 2);
 
         } catch (err) {
-          console.error(err);
-          addMessage("ai", "Error: " + err.message, true);
-        } finally {
+  console.error(err);
+
+  const msg = (err.message || "").toLowerCase();
+
+  // Friendly, ChatGPT-style limits message
+  if (
+    msg.includes("rate") ||
+    msg.includes("limit") ||
+    msg.includes("quota") ||
+    msg.includes("too many") ||
+    msg.includes("retry")
+  ) {
+    addMessage(
+      "ai",
+      "You’ve reached the maximum number of messages for now. Please refresh the page to continue.",
+      true
+    );
+  } else {
+    // Fallback for unexpected errors
+    addMessage(
+      "ai",
+      "Something went wrong. Please refresh the page and try again.",
+      true
+    );
+  }
+} finally {
           sendButton.disabled = false;
           sendButton.textContent = "Send";
         }
@@ -342,3 +365,4 @@ Respond with clarity, minimalism, and useful visual suggestions.
   </script>
 </body>
 </html>
+
