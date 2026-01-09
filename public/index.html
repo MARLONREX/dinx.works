@@ -158,7 +158,7 @@
 
 <div class="input-wrapper">
   <div class="input-bar">
-    <textarea id="userInput" placeholder="Ask DINX anything…"></textarea>
+    <textarea id="userInput" autofocus></textarea>
     <button id="sendButton">Send</button>
   </div>
 </div>
@@ -208,6 +208,7 @@
       button.disabled = false;
       button.textContent = "Send";
       chat.scrollTop = chat.scrollHeight;
+      input.focus();
     }
   }
 
