@@ -9,14 +9,9 @@
     :root {
       --text: #111;
       --muted: #888;
-
-      /* AI messages: pure white */
       --ai-bubble: #ffffff;
-
-      /* User messages: very light grey, subtle */
       --user-bubble: #eaeaea;
       --user-text: #000;
-
       --border: #e6e6e6;
     }
 
@@ -89,7 +84,6 @@
 
     body.intro-done .intro-letter { opacity: 1; }
 
-    /* === HEADER (just a bar) === */
     header {
       height: 58px;
       border-bottom: 1px solid var(--border);
@@ -100,10 +94,8 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      color: #E34234;
     }
 
-    /* === MAIN CHAT AREA === */
     main.chat-area {
       padding: 20px 24px 120px;
       max-width: 780px;
@@ -158,7 +150,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* === INPUT BAR — fixed at bottom === */
     .input-wrapper {
       position: fixed;
       bottom: 0;
@@ -217,7 +208,6 @@
 </head>
 
 <body>
-  <!-- INTRO OVERLAY: DINX becomes the logo -->
   <div id="intro-overlay">
     <div id="intro-logo" aria-label="DINX">
       <span class="intro-letter">D</span>
@@ -245,9 +235,16 @@
   <script>
     console.log("DINX script loaded");
 
-    // ====== MEMORY (browser localStorage) ======
-    let chatHistory = JSON.parse(localStorage.getItem("dinx_history") || "[]");
-    const MAX_TURNS = 20; // keeps history small for speed/cost
+    // ==========================
+    // ✅ MEMORY THAT DISAPPEARS ON RELOAD
+    // ==========================
+    // Use in-page memory only (NOT localStorage).
+    // Also clear any old saved history from earlier versions.
+    try { localStorage.removeItem("dinx_history"); } catch(e) {}
+    try { sessionStorage.removeItem("dinx_history"); } catch(e) {}
+
+    let chatHistory = [];      // lives only while the page is open
+    const MAX_TURNS = 20;      // keep memory bounded (in-tab only)
 
     const SYSTEM_PROMPT = `
 You are DINX, an AI design assistant specialising in architecture,
@@ -280,28 +277,16 @@ Respond with clarity, minimalism, and useful visual suggestions.
         chatArea.scrollTop = chatArea.scrollHeight;
       }
 
-      // ✅ Render saved history so the UI matches the model memory
-      if (chatHistory.length) {
-        for (const m of chatHistory) {
-          if (!m || typeof m !== "object") continue;
-          if (m.role === "user") addMessage("user", m.content || "");
-          if (m.role === "assistant") addMessage("ai", m.content || "");
-        }
-        // Add a little spacing after restoring history
-        chatArea.scrollTop = chatArea.scrollHeight;
-      }
-
       async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
-        // show + store user message
         addMessage("user", text);
         userInput.value = "";
 
+        // in-tab memory
         chatHistory.push({ role: "user", content: text });
         chatHistory = chatHistory.slice(-MAX_TURNS * 2);
-        localStorage.setItem("dinx_history", JSON.stringify(chatHistory));
 
         sendButton.disabled = true;
         sendButton.textContent = "Thinking…";
@@ -314,7 +299,7 @@ Respond with clarity, minimalism, and useful visual suggestions.
               model: "llama-3.1-8b-instant",
               system: SYSTEM_PROMPT,
               message: text,
-              history: chatHistory // ✅ send full conversation history
+              history: chatHistory
             })
           });
 
@@ -325,13 +310,11 @@ Respond with clarity, minimalism, and useful visual suggestions.
           }
 
           const reply = data.reply || "No reply.";
-
-          // show + store assistant reply
           addMessage("ai", reply);
 
+          // store assistant reply in-tab
           chatHistory.push({ role: "assistant", content: reply });
           chatHistory = chatHistory.slice(-MAX_TURNS * 2);
-          localStorage.setItem("dinx_history", JSON.stringify(chatHistory));
 
         } catch (err) {
           console.error(err);
@@ -358,4 +341,4 @@ Respond with clarity, minimalism, and useful visual suggestions.
     });
   </script>
 </body>
-
+</html>
