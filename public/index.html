@@ -10,9 +10,9 @@
       --text: #111;
       --muted: #888;
 
-      /* 🎨 Vermillion palette */
+      /* Vermillion palette */
       --vermillion: #E34234;
-      --vermillion-soft: #E85A4F; /* slightly lighter */
+      --vermillion-soft: #E85A4F;
 
       --ai-bubble: #ffffff;
       --user-bubble: #eaeaea;
@@ -24,21 +24,19 @@
 
     body {
       margin: 0;
-      padding: 0;
-      background: #ffffff;
       font-family: "Univers", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #fff;
       color: var(--text);
       overflow-x: hidden;
     }
 
-    /* === INTRO OVERLAY & LOGO === */
+    /* === INTRO === */
 
     #intro-overlay {
       position: fixed;
       inset: 0;
-      background: #ffffff;
+      background: white;
       z-index: 999;
-      pointer-events: auto;
     }
 
     #intro-logo {
@@ -48,114 +46,89 @@
       transform: translate(-50%, -50%);
       display: flex;
       gap: 0.1em;
-      white-space: nowrap;
     }
 
     .intro-letter {
       font-weight: 700;
       letter-spacing: 0.15em;
       font-size: clamp(40px, 12vw, 160px);
-      color: var(--vermillion-soft); /* 🟠 soft vermillion intro */
+      color: var(--vermillion-soft);
       opacity: 0;
-      transform: scale(1);
-      transition:
-        opacity 3s ease,
-        transform 1.4s ease,
-        letter-spacing 1.4s ease,
-        color 1.4s ease;
+      transition: opacity 3s ease, transform 1.3s ease, letter-spacing 1.3s ease, color 1.3s ease;
     }
 
-    body.intro-visible .intro-letter {
-      opacity: 1;
-    }
+    body.intro-visible .intro-letter { opacity: 1; }
 
     body.intro-move #intro-logo {
       top: 29px;
       left: 22px;
       transform: translate(0, -50%);
-      transition:
-        top 1.3s ease,
-        left 1.3s ease,
-        transform 1.3s ease;
     }
 
     body.intro-move .intro-letter {
       transform: scale(0.11);
       letter-spacing: 0.01em;
-      color: #ffffff; /* 🤍 logo becomes white */
+      color: #fff;
     }
 
     body.intro-done #intro-overlay {
-      background: transparent;
       pointer-events: none;
-      transition: background 0.4s ease;
-    }
-
-    body.intro-done .intro-letter {
-      opacity: 1;
-      color: #ffffff;
+      background: transparent;
     }
 
     /* === HEADER === */
 
     header {
       height: 58px;
-      display: flex;
-      align-items: center;
-      padding: 0 22px;
-      background: var(--vermillion); /* 🟥 banner */
+      background: var(--vermillion);
       position: sticky;
       top: 0;
       z-index: 10;
     }
 
-    /* === MAIN CHAT AREA === */
+    /* === CHAT === */
 
-    main.chat-area {
-      padding: 20px 24px 120px;
+    main {
       max-width: 780px;
       margin: 0 auto;
+      padding: 20px 24px 120px;
       display: flex;
       flex-direction: column;
       gap: 14px;
-      min-height: calc(100vh - 58px);
       opacity: 0;
       transition: opacity 0.4s ease;
     }
 
-    body.intro-done main.chat-area {
-      opacity: 1;
-    }
+    body.intro-done main { opacity: 1; }
 
     .message {
       max-width: 78%;
       padding: 12px 14px;
-      font-size: 15px;
       border-radius: 16px;
-      white-space: pre-wrap;
+      font-size: 15px;
       line-height: 1.5;
       animation: fadeIn 0.2s ease-out;
     }
 
     .message.ai {
-      align-self: flex-start;
       background: var(--ai-bubble);
-      border-bottom-left-radius: 6px;
       border: 1px solid var(--border);
+      border-bottom-left-radius: 6px;
+      align-self: flex-start;
     }
 
     .message.user {
-      align-self: flex-end;
       background: var(--user-bubble);
-      border-bottom-right-radius: 6px;
       border: 1px solid #dedede;
+      border-bottom-right-radius: 6px;
+      align-self: flex-end;
     }
 
     .message.error {
-      align-self: center;
       background: #ffe5e5;
       color: #990000;
       border: 1px solid #ffcccc;
+      align-self: center;
     }
 
     @keyframes fadeIn {
@@ -163,146 +136,146 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* === INPUT BAR === */
+    /* === INPUT === */
 
     .input-wrapper {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 14px 18px;
       background: white;
       border-top: 1px solid var(--border);
+      padding: 14px 18px;
       display: flex;
       justify-content: center;
       opacity: 0;
       transition: opacity 0.4s ease;
     }
 
-    body.intro-done .input-wrapper {
-      opacity: 1;
-    }
+    body.intro-done .input-wrapper { opacity: 1; }
 
     .input-bar {
-      width: 100%;
       max-width: 780px;
+      width: 100%;
       display: flex;
       gap: 10px;
     }
 
     textarea {
       flex: 1;
+      height: 50px;
+      padding: 12px 14px;
       border-radius: 14px;
       border: 1px solid var(--border);
-      padding: 12px 14px;
-      font-size: 15px;
       resize: none;
-      height: 50px;
+      font-size: 15px;
     }
 
     button {
-      background: var(--vermillion); /* 🟥 send button */
+      background: var(--vermillion);
       color: white;
-      padding: 0 18px;
       border: none;
       border-radius: 12px;
-      font-size: 14px;
+      padding: 0 18px;
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: background 0.2s ease;
     }
 
-    button:hover:not(:disabled) {
-      background: var(--vermillion-soft);
-    }
-
-    button:disabled {
-      background: #ccc;
-      cursor: default;
-    }
+    button:hover { background: var(--vermillion-soft); }
+    button:disabled { background: #ccc; cursor: default; }
   </style>
 </head>
 
 <body>
 
-  <div id="intro-overlay">
-    <div id="intro-logo">
-      <span class="intro-letter">D</span>
-      <span class="intro-letter">I</span>
-      <span class="intro-letter">N</span>
-      <span class="intro-letter">X</span>
-    </div>
+<div id="intro-overlay">
+  <div id="intro-logo">
+    <span class="intro-letter">D</span>
+    <span class="intro-letter">I</span>
+    <span class="intro-letter">N</span>
+    <span class="intro-letter">X</span>
   </div>
+</div>
 
-  <header></header>
+<header></header>
 
-  <main class="chat-area" id="chatArea">
-    <div class="message ai">
-      Hi, I’m DINX. Tell me about your project — a room, a building, a product, or a concept — and I’ll help you explore layouts, materials, lighting, and creative direction.
-    </div>
-  </main>
-
-  <div class="input-wrapper">
-    <div class="input-bar">
-      <textarea id="userInput" placeholder="Ask DINX anything…"></textarea>
-      <button id="sendButton">Send</button>
-    </div>
+<main id="chatArea">
+  <div class="message ai">
+    Hi, I’m DINX. Tell me about your project — a room, a building, a product, or a concept.
   </div>
+</main>
 
-  <script>
-    console.log("DINX script loaded");
+<div class="input-wrapper">
+  <div class="input-bar">
+    <textarea id="userInput" placeholder="Ask DINX anything…"></textarea>
+    <button id="sendButton">Send</button>
+  </div>
+</div>
 
-    let chatHistory = [];
-    const MAX_TURNS = 20;
+<script>
+  // Forget all memory on reload
+  try { localStorage.clear(); sessionStorage.clear(); } catch(e){}
 
-    const SYSTEM_PROMPT = `
-You are DINX, an AI design assistant specialising in architecture,
-interiors, concept development, and creative direction.
-Respond with clarity, minimalism, and useful visual suggestions.
-    `.trim();
+  function setupIntro() {
+    setTimeout(() => document.body.classList.add("intro-visible"), 50);
+    setTimeout(() => document.body.classList.add("intro-move"), 3000);
+    setTimeout(() => document.body.classList.add("intro-done"), 4400);
+  }
 
-    function setupIntro() {
-      setTimeout(() => document.body.classList.add("intro-visible"), 50);
-      setTimeout(() => document.body.classList.add("intro-move"), 3000);
-      setTimeout(() => document.body.classList.add("intro-done"), 4400);
+  async function sendMessage() {
+    const input = document.getElementById("userInput");
+    const chat = document.getElementById("chatArea");
+    const button = document.getElementById("sendButton");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const user = document.createElement("div");
+    user.className = "message user";
+    user.textContent = text;
+    chat.appendChild(user);
+    input.value = "";
+
+    button.disabled = true;
+    button.textContent = "Thinking…";
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "rate limit");
+
+      const ai = document.createElement("div");
+      ai.className = "message ai";
+      ai.textContent = data.reply;
+      chat.appendChild(ai);
+
+    } catch {
+      const err = document.createElement("div");
+      err.className = "message error";
+      err.textContent =
+        "You’ve reached the maximum number of messages for now. Please refresh the page to continue.";
+      chat.appendChild(err);
+    } finally {
+      button.disabled = false;
+      button.textContent = "Send";
+      chat.scrollTop = chat.scrollHeight;
     }
+  }
 
-    function setupChat() {
-      const chatArea = document.getElementById("chatArea");
-      const userInput = document.getElementById("userInput");
-      const sendButton = document.getElementById("sendButton");
+  document.getElementById("sendButton").onclick = sendMessage;
+  document.getElementById("userInput").onkeydown = e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
-      async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
+  setupIntro();
+</script>
 
-        const div = document.createElement("div");
-        div.className = "message user";
-        div.textContent = text;
-        chatArea.appendChild(div);
-        userInput.value = "";
-
-        sendButton.disabled = true;
-        sendButton.textContent = "Thinking…";
-
-        try {
-          const res = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: "llama-3.1-8b-instant",
-              system: SYSTEM_PROMPT,
-              message: text
-            })
-          });
-
-          const data = await res.json();
-          const ai = document.createElement("div");
-          ai.className = "message ai";
-          ai.textContent = data.reply || "No reply.";
-          chatArea.appendChild(ai);
-        } catch {
-          const err = document.createElement("div");
-          err.className = "message error";
-          err.textContent =
-            "You’ve reached the maximum number of messages for now. Please refresh the page to continue.";
-
+</body>
+</html>
