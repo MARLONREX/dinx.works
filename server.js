@@ -109,7 +109,7 @@ async function searchWebWithTavily(query) {
 // ==========================
 app.post('/api/chat', async (req, res) => {
   try {
-    const { model, system, message } = req.body;
+    const { model, system, message, history } = req.body;
 
     if (!GROQ_API_KEY) {
       return res.status(500).json({ error: 'GROQ_API_KEY not set on server.' });
@@ -144,6 +144,14 @@ app.post('/api/chat', async (req, res) => {
       });
     }
 
+    if (Array.isArray(history)) {
+  for (const m of history) {
+    if (!m || typeof m !== "object") continue;
+    if (!["user", "assistant"].includes(m.role)) continue;
+    if (typeof m.content !== "string") continue;
+    messages.push({ role: m.role, content: m.content });
+  }
+}
     messages.push({ role: 'user', content: message });
 
     // 3️⃣ Call Groq LLM (OpenAI-compatible endpoint)
@@ -183,4 +191,5 @@ app.post('/api/chat', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ DINX server listening on http://localhost:${PORT}`);
 });
+
 
