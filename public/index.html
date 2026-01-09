@@ -9,6 +9,11 @@
     :root {
       --text: #111;
       --muted: #888;
+
+      /* 🎨 Vermillion palette */
+      --vermillion: #E34234;
+      --vermillion-soft: #E85A4F; /* slightly lighter */
+
       --ai-bubble: #ffffff;
       --user-bubble: #eaeaea;
       --user-text: #000;
@@ -27,6 +32,7 @@
     }
 
     /* === INTRO OVERLAY & LOGO === */
+
     #intro-overlay {
       position: fixed;
       inset: 0;
@@ -46,20 +52,22 @@
     }
 
     .intro-letter {
-      font-family: "Univers", system-ui, -apple-system, "Segoe UI", sans-serif;
       font-weight: 700;
       letter-spacing: 0.15em;
       font-size: clamp(40px, 12vw, 160px);
-      color: #111;
+      color: var(--vermillion-soft); /* 🟠 soft vermillion intro */
       opacity: 0;
       transform: scale(1);
       transition:
         opacity 3s ease,
         transform 1.4s ease,
-        letter-spacing 1.4s ease;
+        letter-spacing 1.4s ease,
+        color 1.4s ease;
     }
 
-    body.intro-visible .intro-letter { opacity: 1; }
+    body.intro-visible .intro-letter {
+      opacity: 1;
+    }
 
     body.intro-move #intro-logo {
       top: 29px;
@@ -74,6 +82,7 @@
     body.intro-move .intro-letter {
       transform: scale(0.11);
       letter-spacing: 0.01em;
+      color: #ffffff; /* 🤍 logo becomes white */
     }
 
     body.intro-done #intro-overlay {
@@ -82,19 +91,25 @@
       transition: background 0.4s ease;
     }
 
-    body.intro-done .intro-letter { opacity: 1; }
+    body.intro-done .intro-letter {
+      opacity: 1;
+      color: #ffffff;
+    }
+
+    /* === HEADER === */
 
     header {
       height: 58px;
-      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       padding: 0 22px;
-      background: white;
+      background: var(--vermillion); /* 🟥 banner */
       position: sticky;
       top: 0;
       z-index: 10;
     }
+
+    /* === MAIN CHAT AREA === */
 
     main.chat-area {
       padding: 20px 24px 120px;
@@ -106,10 +121,11 @@
       min-height: calc(100vh - 58px);
       opacity: 0;
       transition: opacity 0.4s ease;
-      overflow-anchor: none;
     }
 
-    body.intro-done main.chat-area { opacity: 1; }
+    body.intro-done main.chat-area {
+      opacity: 1;
+    }
 
     .message {
       max-width: 78%;
@@ -124,7 +140,6 @@
     .message.ai {
       align-self: flex-start;
       background: var(--ai-bubble);
-      color: var(--text);
       border-bottom-left-radius: 6px;
       border: 1px solid var(--border);
     }
@@ -132,7 +147,6 @@
     .message.user {
       align-self: flex-end;
       background: var(--user-bubble);
-      color: var(--user-text);
       border-bottom-right-radius: 6px;
       border: 1px solid #dedede;
     }
@@ -142,13 +156,14 @@
       background: #ffe5e5;
       color: #990000;
       border: 1px solid #ffcccc;
-      max-width: 90%;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* === INPUT BAR === */
 
     .input-wrapper {
       position: fixed;
@@ -164,7 +179,9 @@
       transition: opacity 0.4s ease;
     }
 
-    body.intro-done .input-wrapper { opacity: 1; }
+    body.intro-done .input-wrapper {
+      opacity: 1;
+    }
 
     .input-bar {
       width: 100%;
@@ -181,14 +198,10 @@
       font-size: 15px;
       resize: none;
       height: 50px;
-      max-height: 150px;
-      outline: none;
     }
 
-    textarea:focus { border-color: #333; }
-
     button {
-      background: #111;
+      background: var(--vermillion); /* 🟥 send button */
       color: white;
       padding: 0 18px;
       border: none;
@@ -198,18 +211,21 @@
       transition: 0.2s ease;
     }
 
-    button:hover:not(:disabled) { background: black; }
-    button:disabled { background: #ccc; cursor: default; }
+    button:hover:not(:disabled) {
+      background: var(--vermillion-soft);
+    }
 
-    @media (max-width: 600px) {
-      .message { max-width: 90%; }
+    button:disabled {
+      background: #ccc;
+      cursor: default;
     }
   </style>
 </head>
 
 <body>
+
   <div id="intro-overlay">
-    <div id="intro-logo" aria-label="DINX">
+    <div id="intro-logo">
       <span class="intro-letter">D</span>
       <span class="intro-letter">I</span>
       <span class="intro-letter">N</span>
@@ -235,16 +251,8 @@
   <script>
     console.log("DINX script loaded");
 
-    // ==========================
-    // ✅ MEMORY THAT DISAPPEARS ON RELOAD
-    // ==========================
-    // Use in-page memory only (NOT localStorage).
-    // Also clear any old saved history from earlier versions.
-    try { localStorage.removeItem("dinx_history"); } catch(e) {}
-    try { sessionStorage.removeItem("dinx_history"); } catch(e) {}
-
-    let chatHistory = [];      // lives only while the page is open
-    const MAX_TURNS = 20;      // keep memory bounded (in-tab only)
+    let chatHistory = [];
+    const MAX_TURNS = 20;
 
     const SYSTEM_PROMPT = `
 You are DINX, an AI design assistant specialising in architecture,
@@ -263,30 +271,15 @@ Respond with clarity, minimalism, and useful visual suggestions.
       const userInput = document.getElementById("userInput");
       const sendButton = document.getElementById("sendButton");
 
-      if (!chatArea || !userInput || !sendButton) {
-        console.error("❌ DINX: chat elements not found");
-        return;
-      }
-
-      function addMessage(sender, text, isError = false) {
-        const div = document.createElement("div");
-        div.classList.add("message", sender);
-        if (isError) div.classList.add("error");
-        div.textContent = text;
-        chatArea.appendChild(div);
-        chatArea.scrollTop = chatArea.scrollHeight;
-      }
-
       async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
-        addMessage("user", text);
+        const div = document.createElement("div");
+        div.className = "message user";
+        div.textContent = text;
+        chatArea.appendChild(div);
         userInput.value = "";
-
-        // in-tab memory
-        chatHistory.push({ role: "user", content: text });
-        chatHistory = chatHistory.slice(-MAX_TURNS * 2);
 
         sendButton.disabled = true;
         sendButton.textContent = "Thinking…";
@@ -298,71 +291,18 @@ Respond with clarity, minimalism, and useful visual suggestions.
             body: JSON.stringify({
               model: "llama-3.1-8b-instant",
               system: SYSTEM_PROMPT,
-              message: text,
-              history: chatHistory
+              message: text
             })
           });
 
           const data = await res.json();
-
-          if (!res.ok) {
-            throw new Error(data?.details || data?.error || ("Backend error " + res.status));
-          }
-
-          const reply = data.reply || "No reply.";
-          addMessage("ai", reply);
-
-          // store assistant reply in-tab
-          chatHistory.push({ role: "assistant", content: reply });
-          chatHistory = chatHistory.slice(-MAX_TURNS * 2);
-
-        } catch (err) {
-  console.error(err);
-
-  const msg = (err.message || "").toLowerCase();
-
-  // Friendly, ChatGPT-style limits message
-  if (
-    msg.includes("rate") ||
-    msg.includes("limit") ||
-    msg.includes("quota") ||
-    msg.includes("too many") ||
-    msg.includes("retry")
-  ) {
-    addMessage(
-      "ai",
-      "You’ve reached the maximum number of messages for now. Please refresh the page to continue.",
-      true
-    );
-  } else {
-    // Fallback for unexpected errors
-    addMessage(
-      "ai",
-      "Something went wrong. Please refresh the page and try again.",
-      true
-    );
-  }
-} finally {
-          sendButton.disabled = false;
-          sendButton.textContent = "Send";
-        }
-      }
-
-      sendButton.addEventListener("click", sendMessage);
-
-      userInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setupIntro();
-      setupChat();
-    });
-  </script>
-</body>
-</html>
+          const ai = document.createElement("div");
+          ai.className = "message ai";
+          ai.textContent = data.reply || "No reply.";
+          chatArea.appendChild(ai);
+        } catch {
+          const err = document.createElement("div");
+          err.className = "message error";
+          err.textContent =
+            "You’ve reached the maximum number of messages for now. Please refresh the page to continue.";
 
